@@ -1,0 +1,58 @@
+<nav class="navbar" [class.scrolled]="scrolled">
+  <a class="logo" routerLink="/" aria-label="Toon Speaker home">
+    <span class="logo-mark" aria-hidden="true"></span>
+    <span class="logo-text">Toon Speaker</span>
+  </a>
+
+  <div class="menu" [class.open]="menuOpen">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+    <a routerLink="/type/cartoons" routerLinkActive="active">Cartoons</a>
+    <a routerLink="/type/anime" routerLinkActive="active">Anime</a>
+    <a routerLink="/type/movies" routerLinkActive="active">Movies</a>
+  </div>
+
+  <div class="right">
+    <div class="search">
+      <input
+        type="text"
+        placeholder="Search series..."
+        [(ngModel)]="searchText"
+        (input)="onSearchInput()"
+        (focus)="onSearchFocus(); openSuggestions()"
+        (blur)="onSearchBlur()"
+        (keyup.enter)="onSearch()"
+        (keydown.escape)="closeSuggestions()"
+      />
+
+      <div class="suggestions" *ngIf="showSuggestions">
+        <div class="suggestion-section" *ngIf="suggestedSeries.length">
+          <div class="section-title">Series</div>
+          <button
+            class="suggestion-item"
+            type="button"
+            *ngFor="let s of suggestedSeries"
+            (click)="selectSeries(s.name)"
+          >
+            <span class="text">{{ s.name }}</span>
+            <span class="meta">{{ s.type }}</span>
+          </button>
+        </div>
+
+        <button
+          class="suggestion-item view-all"
+          type="button"
+          *ngIf="searchText.trim()"
+          (click)="onSearch()"
+        >
+          View all results
+        </button>
+      </div>
+    </div>
+
+    <button class="hamburger" type="button" (click)="toggleMenu()" aria-label="Toggle menu">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </button>
+  </div>
+</nav>

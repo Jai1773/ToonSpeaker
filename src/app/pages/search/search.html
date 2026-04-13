@@ -1,0 +1,22 @@
+<div class="search-page">
+  <h1>Search</h1>
+
+  <p class="hint" *ngIf="!query">Start typing to search series.</p>
+
+  <p class="hint" *ngIf="query">
+    Showing results for: <span class="q">{{ query }}</span>
+  </p>
+
+  <div class="results" *ngIf="sections.length; else empty">
+    <div class="result-section" *ngFor="let section of sections">
+      <h2>{{ section.title }}</h2>
+      <div class="series-grid">
+        <app-series-card *ngFor="let s of section.items" [series]="s"></app-series-card>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #empty>
+    <p class="hint" *ngIf="query">No series found.</p>
+  </ng-template>
+</div>

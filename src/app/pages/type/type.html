@@ -1,0 +1,11 @@
+<div class="type-page" *ngIf="vm$ | async as vm">
+  <h1>{{ vm.heading }}</h1>
+
+  <div class="grid" *ngIf="vm.series.length; else empty">
+    <app-series-card *ngFor="let s of vm.series" [series]="s"></app-series-card>
+  </div>
+
+  <ng-template #empty>
+    <p class="hint">No series found.</p>
+  </ng-template>
+</div>

@@ -1,0 +1,19 @@
+<div
+  class="card"
+  tabindex="0"
+  (click)="openSeries()"
+  (keydown.enter)="openSeries()"
+>
+  <img
+    [src]="series.thumbnail || fallbackThumbnail"
+    [alt]="series.name"
+    loading="lazy"
+    decoding="async"
+    (error)="onImgError($event)"
+  />
+
+  <div class="info">
+    <p class="title">{{ series.name }}</p>
+    <p class="count">{{ series.type }}</p>
+  </div>
+</div>

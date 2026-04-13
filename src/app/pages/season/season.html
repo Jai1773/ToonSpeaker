@@ -1,0 +1,104 @@
+<div class="season-container" *ngIf="vm$ | async as vm">
+
+  <a class="back" [routerLink]="['/series', vm.seriesInfo?.name || '']">
+    Back to seasons
+  </a>
+
+  <div class="header">
+    <img
+      class="thumb"
+      [src]="vm.seasonInfo?.thumbnail || vm.seriesInfo?.thumbnail || fallbackThumbnail"
+      [alt]="(vm.seriesInfo?.name || '') + ' Season ' + vm.seasonInfo?.seasonNumber"
+      loading="eager"
+      decoding="async"
+      (error)="onImgError($event)"
+    />
+    <div class="meta">
+      <h1 class="title">
+        {{ vm.seriesInfo?.name || '' }} - Season {{ vm.seasonInfo?.seasonNumber }}
+      </h1>
+
+      <p class="subtitle" *ngIf="vm.seasonInfo?.episodeCount">
+        {{ vm.seasonInfo?.episodeCount }} episodes
+      </p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <ng-container *ngIf="currentVideo; else empty">
+
+    <!-- PLAYER -->
+    <div class="player">
+      <iframe
+        *ngIf="safeVideoUrl; else unsafeVideo"
+        [src]="safeVideoUrl"
+        width="100%"
+        height="200"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+
+      <!-- CONTROLS -->
+        <div class="player-controls" *ngIf="servers.length > 0 || availableAudios.length > 0">
+
+          <label class="selector" *ngIf="servers.length > 0">
+            <span class="selector-label">Server</span>
+            <select class="selector-input" (change)="onServerSelect($event)">
+              <option *ngFor="let srv of servers; let i = index" [value]="srv.id" [selected]="srv.id === selectedServerId">{{ srv.label || ('Server ' + (i + 1)) }}</option>
+            </select>
+          </label>
+
+          <label class="selector" *ngIf="availableAudios.length > 0">
+            <span class="selector-label">Audio</span>
+            <select
+              class="selector-input"
+              [value]="selectedAudio"
+              (change)="onAudioChange($event)"
+            >
+              <option *ngFor="let a of availableAudios || []" [value]="a" [selected]="a === selectedAudio">{{ a }}</option>
+            </select>
+          </label>
+
+        </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div class="details">
+      <h2 class="current-title">{{ currentVideo.title }}</h2>
+      <p class="current-desc" *ngIf="currentVideo.description">
+        {{ currentVideo.description }}
+      </p>
+    </div>
+
+    <!-- EPISODES -->
+    <h2 class="episodes-title">Episodes</h2>
+
+    <!-- ✅ CHANGED ONLY THIS PART -->
+    <div class="episodes-number-grid">
+      <button
+        type="button"
+        class="episode-number"
+        *ngFor="let v of vm.episodes"
+        [class.active]="v.id === currentVideo.id"
+        (click)="selectEpisode(v)"
+      >
+        {{ v.episodeNumber }}
+      </button>
+    </div>
+
+  </ng-container>
+
+  <!-- EMPTY STATE -->
+  <ng-template #empty>
+    <p class="hint" *ngIf="vm.error; else noVideo">{{ vm.error }}</p>
+  </ng-template>
+
+  <ng-template #noVideo>
+    <p class="hint">Select an episode to start watching</p>
+  </ng-template>
+
+  <ng-template #unsafeVideo>
+    <p class="hint">Unable to load this video.</p>
+  </ng-template>
+
+</div>

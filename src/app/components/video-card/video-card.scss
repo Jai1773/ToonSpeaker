@@ -1,0 +1,85 @@
+.card {
+  position: relative;
+  cursor: pointer;
+  transition: 180ms ease;
+  width: 100%;
+}
+
+.thumb-wrap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-0);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+}
+
+img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.02);
+  transition: 240ms ease;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120px circle at 70% 65%, rgba(56, 189, 248, 0.22), transparent 60%),
+    linear-gradient(180deg, rgba(7, 10, 18, 0.05), rgba(7, 10, 18, 0.75));
+  opacity: 0.9;
+  transition: 180ms ease;
+}
+
+.overlay::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(7, 10, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.overlay::before {
+  content: '';
+  position: absolute;
+  left: 32px;
+  bottom: 26px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid rgba(255, 255, 255, 0.92);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  transform: translateX(-2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
+  .card:hover img {
+    transform: scale(1.06);
+  }
+
+  .card:hover .overlay {
+    opacity: 1;
+  }
+}
+
+.title {
+  margin: 10px 2px 0;
+  font-size: 13px;
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

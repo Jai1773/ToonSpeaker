@@ -1,0 +1,8 @@
+<div class="card" tabindex="0" (click)="openVideo()" (keydown.enter)="openVideo()">
+  <div class="thumb-wrap">
+    <img [src]="video.thumbnail" [alt]="video.title" loading="lazy" decoding="async" (error)="onImgError($event)" />
+    <div class="overlay" aria-hidden="true"></div>
+  </div>
+
+  <p class="title">{{ video.title }}</p>
+</div>

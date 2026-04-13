@@ -1,0 +1,53 @@
+<div class="watch-page" *ngIf="video; else empty">
+  <div class="player-card">
+    <iframe
+      *ngIf="safeVideoUrl; else unsafeVideo"
+      [src]="safeVideoUrl"
+      width="100%"
+      height="520"
+      frameborder="0"
+      allowfullscreen
+    >
+    </iframe>
+
+    <div class="details">
+      <div class="selectors" *ngIf="availableAudios.length > 1 || availableQualities.length > 1">
+        <label class="selector" *ngIf="availableAudios.length > 1">
+          <span class="selector-label">Audio</span>
+          <select class="selector-input" [value]="selectedAudio" (change)="onAudioChange($event)">
+            <option *ngFor="let a of availableAudios" [value]="a">{{ a }}</option>
+          </select>
+        </label>
+
+        <label class="selector" *ngIf="availableQualities.length > 1">
+          <span class="selector-label">Video Quality</span>
+          <select class="selector-input" [value]="selectedQuality ?? ''" (change)="onQualityChange($event)">
+            <option *ngFor="let q of availableQualities" [value]="q">{{ q }}p</option>
+          </select>
+        </label>
+      </div>
+
+      <h1 class="title">{{ video.title }}</h1>
+      <p class="desc" *ngIf="video.description">{{ video.description }}</p>
+    </div>
+  </div>
+
+  <div class="related">
+    <div class="head">
+      <h2>More like this</h2>
+      <p class="sub">Keep watching</p>
+    </div>
+
+    <div class="scroll-row">
+      <app-video-card *ngFor="let v of relatedVideos" [video]="v"></app-video-card>
+    </div>
+  </div>
+</div>
+
+<ng-template #unsafeVideo>
+  <p class="hint">Unable to load this video.</p>
+</ng-template>
+
+<ng-template #empty>
+  <p class="hint">{{ emptyMessage }}</p>
+</ng-template>

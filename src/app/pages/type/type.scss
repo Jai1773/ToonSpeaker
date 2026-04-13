@@ -1,0 +1,31 @@
+.type-page {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--page-top) var(--gutter) var(--page-bottom);
+  animation: fadeUp 260ms ease both;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+}
+
+.hint {
+  margin: 0 0 18px;
+  color: var(--text-1);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 210px));
+  justify-content: center;
+  gap: var(--grid-gap);
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}

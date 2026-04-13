@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+.page {
+  margin-top: var(--navbar-h, 72px);
+  min-height: calc(100vh - var(--navbar-h, 72px));
+}

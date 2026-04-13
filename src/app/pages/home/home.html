@@ -1,0 +1,88 @@
+<app-hero></app-hero>
+
+<div class="container">
+  <div class="section">
+    <div class="section-head">
+      <h2>Trending</h2>
+      <p class="sub">Popular picks right now</p>
+    </div>
+
+    <button
+      *ngIf="trendingScrollable"
+      class="nav left"
+      type="button"
+      (click)="scrollLeft(trendingRow)"
+      aria-label="Scroll left"
+    >
+      &lsaquo;
+    </button>
+    <button
+      *ngIf="trendingScrollable"
+      class="nav right"
+      type="button"
+      (click)="scrollRight(trendingRow)"
+      aria-label="Scroll right"
+    >
+      &rsaquo;
+    </button>
+
+    <div class="scroll-row" #trendingRow>
+      <app-series-card *ngFor="let s of (trending$ | async) ?? []" [series]="s"></app-series-card>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Popular</h2>
+      <p class="sub">Binge-worthy series</p>
+    </div>
+
+    <button
+      *ngIf="popularScrollable"
+      class="nav left"
+      type="button"
+      (click)="scrollLeft(popularRow)"
+      aria-label="Scroll left"
+    >
+      &lsaquo;
+    </button>
+    <button
+      *ngIf="popularScrollable"
+      class="nav right"
+      type="button"
+      (click)="scrollRight(popularRow)"
+      aria-label="Scroll right"
+    >
+      &rsaquo;
+    </button>
+
+    <div class="scroll-row" #popularRow>
+      <app-series-card *ngFor="let s of (popular$ | async) ?? []" [series]="s"></app-series-card>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2>Categories</h2>
+      <p class="sub">Pick a vibe</p>
+    </div>
+
+    <div class="category-grid" *ngIf="categories$ | async as cats">
+      <a
+        class="category-card"
+        *ngFor="let cat of cats"
+        [class.empty]="cat.count === 0"
+        [attr.data-tone]="cat.tone"
+        [attr.aria-disabled]="cat.count === 0"
+        [routerLink]="['/type', cat.slug]"
+      >
+        <div class="cat-top">
+          <div class="cat-title">{{ cat.label }}</div>
+          <div class="cat-count">{{ cat.count }}</div>
+        </div>
+        <div class="cat-sub">{{ cat.subtitle }}</div>
+        <div class="cat-cta">{{ cat.count === 0 ? 'Coming soon' : 'Browse' }}</div>
+      </a>
+    </div>
+  </div>
+</div>
