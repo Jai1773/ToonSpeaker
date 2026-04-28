@@ -1,6 +1,6 @@
 <div class="season-container" *ngIf="vm$ | async as vm">
 
-  <a class="back" [routerLink]="['/series', vm.seriesInfo?.name || '']">
+  <a class="back" [routerLink]="['/series', (vm.seriesInfo?.file || '').replace(/\.json$/i, '')]">
     Back to seasons
   </a>
 
@@ -39,27 +39,28 @@
       ></iframe>
 
       <!-- CONTROLS -->
-        <div class="player-controls" *ngIf="servers.length > 0 || availableAudios.length > 0">
+      <div class="player-controls" *ngIf="servers.length > 0">
 
-          <label class="selector" *ngIf="servers.length > 0">
-            <span class="selector-label">Server</span>
-            <select class="selector-input" (change)="onServerSelect($event)">
-              <option *ngFor="let srv of servers; let i = index" [value]="srv.id" [selected]="srv.id === selectedServerId">{{ srv.label || ('Server ' + (i + 1)) }}</option>
-            </select>
-          </label>
+        <label class="selector" *ngIf="servers.length > 0">
+          <span class="selector-label">Server</span>
+          <select class="selector-input" (change)="onServerSelect($event)">
+            <option *ngFor="let srv of servers; let i = index" [value]="srv.id" [selected]="srv.id === selectedServerId">{{ srv.label || ('Server ' + (i + 1)) }}</option>
+          </select>
+        </label>
 
-          <label class="selector" *ngIf="availableAudios.length > 0">
-            <span class="selector-label">Audio</span>
-            <select
-              class="selector-input"
-              [value]="selectedAudio"
-              (change)="onAudioChange($event)"
-            >
-              <option *ngFor="let a of availableAudios || []" [value]="a" [selected]="a === selectedAudio">{{ a }}</option>
-            </select>
-          </label>
+        <!-- 🎧 CONDITIONALLY HIDE AUDIO SELECTOR -->
+        <label class="selector" *ngIf="hasAudioDetails">
+          <span class="selector-label">Audio</span>
+          <select
+            class="selector-input"
+            [value]="selectedAudio"
+            (change)="onAudioChange($event)"
+          >
+            <option *ngFor="let a of availableAudios || []" [value]="a" [selected]="a === selectedAudio">{{ a }}</option>
+          </select>
+        </label>
 
-        </div>
+      </div>
     </div>
 
     <!-- DETAILS -->
@@ -73,7 +74,6 @@
     <!-- EPISODES -->
     <h2 class="episodes-title">Episodes</h2>
 
-    <!-- ✅ CHANGED ONLY THIS PART -->
     <div class="episodes-number-grid">
       <button
         type="button"

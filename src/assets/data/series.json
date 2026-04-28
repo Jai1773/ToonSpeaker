@@ -2,13 +2,7 @@
   {
     "name": "Ben 10 Omniverse",
     "file": "ben10-omniverse.json",
-    "thumbnail": "/assets/thambnails/ben1.jpg",
-    "type": "cartoon"
-  },
-  {
-    "name": "Ben 10 Alien Force",
-    "file": "ben10-alien-force.json",
-    "thumbnail": "/assets/thambnails/ben1.jpg",
+    "thumbnail": "/assets/thambnails/seriesImages/omniverse.jpg",
     "type": "cartoon"
   }
 ]

@@ -5,71 +5,78 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 
-const browserDistFolder = join(import.meta.dirname, '../browser');
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+const isDev = process.env['NODE_ENV'] !== 'production';
+
+/**
+ * ONLY use real dist folder in production
+ */
+const browserDistFolder = isDev
+  ? null
+  : resolve(__dirname, '../browser');
+
+const indexHtmlPath = browserDistFolder
+  ? resolve(browserDistFolder, 'index.html')
+  : null;
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Serve static files ONLY in production
  */
-
-/**
- * Serve static files from /browser
- */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
-
-/**
- * Handle all other requests by rendering the Angular application.
- */
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) => {
-      if (response) {
-        writeResponseToNodeResponse(response, res);
-      } else {
-        const indexHtml = join(browserDistFolder, 'index.html');
-        res.sendFile(indexHtml, (err) => {
-          if (err) next(err);
-        });
-      }
-    })
-    .catch(next);
-});
-
-/**
- * Start the server if this module is the main entry point, or it is ran via PM2.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
- */
-if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
-    if (error) {
-      throw error;
-    }
-
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
+if (!isDev && browserDistFolder) {
+  app.use(
+    express.static(browserDistFolder, {
+      maxAge: '1y',
+      index: false,
+      redirect: false,
+    }),
+  );
 }
 
 /**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
+ * Main handler
  */
+app.use(async (req, res, next) => {
+  try {
+    const response = await angularApp.handle(req);
+
+    if (response) {
+      writeResponseToNodeResponse(response, res);
+      return;
+    }
+
+    /**
+     * Fallback ONLY in production
+     */
+    if (!isDev && indexHtmlPath && fs.existsSync(indexHtmlPath)) {
+      res.sendFile(indexHtmlPath);
+    } else {
+      res.status(404).send('Page not found');
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Start server
+ */
+if (isMainModule(import.meta.url) || process.env['pm_id']) {
+  const port = process.env['PORT'] || 4000;
+
+  app.listen(port, (error) => {
+    if (error) throw error;
+
+    console.log(`Server running at http://localhost:${port}`);
+    console.log('Mode:', isDev ? 'DEV (Vite)' : 'PRODUCTION');
+  });
+}
+
 export const reqHandler = createNodeRequestHandler(app);

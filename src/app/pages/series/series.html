@@ -20,7 +20,7 @@
       <a
         class="season"
         *ngFor="let s of vm.seasons"
-        [routerLink]="['/series', vm.seriesName, 'season', s.seasonNumber]"
+        [routerLink]="['/series', (vm.seriesFile || '').replace(/\.json$/i, ''), 'season', s.seasonNumber]"
         [state]="vm.seriesFile ? { file: vm.seriesFile } : {}"
       >
         <img

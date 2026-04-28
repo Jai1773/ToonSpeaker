@@ -18,6 +18,14 @@ export class SeriesCard {
   constructor(private router: Router) {}
 
   openSeries() {
+    const file = (this.series?.file || '').trim();
+    if (file) {
+      const slug = file.replace(/\.json$/i, '');
+      this.router.navigate(['/series', slug]);
+      return;
+    }
+
+    // Fallback to name if file isn't available
     const name = this.series?.name?.trim();
     if (!name) return;
     this.router.navigate(['/series', name]);

@@ -51,7 +51,18 @@ export class Series {
     switchMap((name) => {
       this.seriesName = name;
 
-      return this.videoService.getSeriesByName(name).pipe(
+      // First try resolving by human-readable name; if that fails,
+      // treat the param as a slug (series file basename) and try
+      // getSeriesByFile(slug + '.json').
+      const resolveSeries$ = this.videoService.getSeriesByName(name).pipe(
+        switchMap((series) => {
+          if (series) return of(series);
+          const file = name.toLowerCase().endsWith('.json') ? name : `${name}.json`;
+          return this.videoService.getSeriesByFile(file);
+        })
+      );
+
+      return resolveSeries$.pipe(
         switchMap((series) => {
           if (!series) {
             return of({

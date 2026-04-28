@@ -10,7 +10,7 @@
 .hero-bg {
   position: absolute;
   inset: -20px;
-  background: url('/assets/thambnails/ben2.jpeg') center/cover no-repeat;
+  background: url('/assets/banners/Omniverse.jpeg') center/cover no-repeat;
   transform: scale(1.06);
   filter: saturate(1.05) contrast(1.05);
   animation: heroZoom 9s ease-in-out infinite alternate;
@@ -76,6 +76,9 @@ p {
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
   border-radius: 12px;
   padding: 12px 16px;
@@ -83,6 +86,7 @@ p {
   transition: 180ms ease;
   font-weight: 700;
   letter-spacing: 0.2px;
+  text-decoration: none;
 }
 
 .btn.primary {
