@@ -18,6 +18,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'series/:name/movie/:videoId',
+    renderMode: RenderMode.Client
+  },
+  {
     path: 'series/:name',
     renderMode: RenderMode.Server
   },

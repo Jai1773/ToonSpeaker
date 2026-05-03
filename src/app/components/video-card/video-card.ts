@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { SeriesVideoWithSeries } from '../../services/video.service';
 
@@ -11,10 +11,16 @@ import { SeriesVideoWithSeries } from '../../services/video.service';
 })
 export class VideoCard {
   @Input({ required: true }) video!: SeriesVideoWithSeries;
+  @Output() cardClick = new EventEmitter<SeriesVideoWithSeries>();
 
   constructor(private router: Router) {}
 
   openVideo() {
+    if (this.cardClick.observed) {
+      this.cardClick.emit(this.video);
+      return;
+    }
+
     const id = this.video?.id;
     const seriesFile = this.video?.seriesFile;
     if (typeof id !== 'number' || !Number.isFinite(id)) return;

@@ -2,13 +2,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, DestroyRef, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SeriesCard } from '../../components/series-card/series-card';
-import { SeriesListItem, VideoService } from '../../services/video.service';
-import { Subscription } from 'rxjs';
+import { MovieSearchResult, SeriesListItem, VideoService } from '../../services/video.service';
+import { Subscription, combineLatest } from 'rxjs';
+import { VideoCard } from '../../components/video-card/video-card';
 
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [CommonModule, SeriesCard],
+  imports: [CommonModule, SeriesCard, VideoCard],
   templateUrl: './search.html',
   styleUrls: ['./search.scss'],
 })
@@ -23,6 +24,7 @@ export class Search {
 
   query = '';
   sections: Array<{ title: string; items: SeriesListItem[] }> = [];
+  movieResults: MovieSearchResult[] = [];
   private resultsSub: Subscription | null = null;
 
   ngOnInit() {
@@ -39,13 +41,17 @@ export class Search {
 
       if (!q) {
         this.sections = [];
+        this.movieResults = [];
         if (this.resultsSub) this.resultsSub.unsubscribe();
         this.redirectIfEmptyQuery();
         return;
       }
 
       if (this.resultsSub) this.resultsSub.unsubscribe();
-      this.resultsSub = this.videoService.searchSeries(q, 24).subscribe((items) => {
+      this.resultsSub = combineLatest([
+        this.videoService.searchSeries(q, 24),
+        this.videoService.searchMovieVideos(q, 18),
+      ]).subscribe(([items, movieResults]) => {
         const cartoons = items.filter((s) => s.type === 'cartoon');
         const anime = items.filter((s) => s.type === 'anime');
         const movies = items.filter((s) => s.type === 'movie');
@@ -53,8 +59,10 @@ export class Search {
         this.sections = [
           { title: 'Cartoons', items: cartoons },
           { title: 'Anime', items: anime },
-          { title: 'Movies', items: movies },
+          { title: 'Movie Series', items: movies },
         ].filter((section) => section.items.length);
+
+        this.movieResults = movieResults;
       });
     });
 
@@ -74,5 +82,11 @@ export class Search {
     } catch {}
 
     this.router.navigateByUrl(target, { replaceUrl: true });
+  }
+
+  openMovie(video: MovieSearchResult) {
+    const slug = (video.seriesFile || '').replace(/\.json$/i, '');
+    if (!slug || !video?.id) return;
+    this.router.navigate(['/series', slug, 'movie', video.id]);
   }
 }

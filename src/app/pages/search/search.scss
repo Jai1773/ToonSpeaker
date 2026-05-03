@@ -39,8 +39,19 @@ h2 {
   gap: var(--grid-gap);
 }
 
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
+  justify-content: start;
+  gap: var(--grid-gap);
+}
+
 @media (max-width: 768px) {
   .series-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }

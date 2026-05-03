@@ -61,6 +61,9 @@ export type SeriesVideoWithSeries = SeriesVideo & {
 };
 
 export type VideoSearchResult = SeriesVideoWithSeries;
+export type MovieSearchResult = SeriesVideoWithSeries & {
+  seriesName: string;
+};
 
 @Injectable({
   providedIn: 'root',
@@ -107,6 +110,13 @@ export class VideoService {
     s = s.replace(/\s+/g, ' ').trim();
 
     return s;
+  }
+
+  private matchesSearchText(source: unknown, query: string): boolean {
+    const normalizedSource = this.normalizeSeriesNameKey(source);
+    const normalizedQuery = this.normalizeSeriesNameKey(query);
+    if (!normalizedSource || !normalizedQuery) return false;
+    return normalizedSource.includes(normalizedQuery);
   }
 
   private normalizeStreams(value: unknown): SeriesVideoStream[] {
@@ -344,7 +354,7 @@ export class VideoService {
           concatMap((s) =>
             this.getVideosBySeries(s.file).pipe(
               map((videos) =>
-                videos.filter((v) => (v.title ?? '').toLowerCase().includes(q)),
+                videos.filter((v) => this.matchesSearchText(v.title, q)),
               ),
               catchError(() => of([] as SeriesVideoWithSeries[])),
             ),
@@ -363,17 +373,84 @@ export class VideoService {
     );
   }
 
+  searchMovieVideos(query: string, limit = 10): Observable<MovieSearchResult[]> {
+    const q = (query ?? '').trim();
+    const max = Math.max(0, Math.min(50, Number(limit) || 0));
+    if (!q || !max) return of([]);
+
+    return this.getSeriesList().pipe(
+      map((seriesList) => seriesList.filter((series) => series.type === 'movie')),
+      switchMap((movieSeries) =>
+        from(movieSeries).pipe(
+          concatMap((series) =>
+            this.getVideosBySeries(series.file).pipe(
+                map((videos) =>
+                  videos
+                    .filter((video) => this.matchesSearchText(video.title, q))
+                    .map((video) => ({
+                      ...video,
+                      seriesName: series.name,
+                  })),
+              ),
+              catchError(() => of([] as MovieSearchResult[])),
+            ),
+          ),
+          scan((acc: MovieSearchResult[], matches: MovieSearchResult[]) => {
+            if (acc.length >= max) return acc;
+            const remaining = max - acc.length;
+            if (!matches.length) return acc;
+            return acc.concat(matches.slice(0, remaining));
+          }, [] as MovieSearchResult[]),
+          takeWhile((results) => results.length < max, true),
+          last(),
+          catchError(() => of([] as MovieSearchResult[])),
+        ),
+      ),
+    );
+  }
+
   searchSeries(query: string, limit = 6): Observable<SeriesListItem[]> {
-    const q = (query ?? '').trim().toLowerCase();
+    const q = (query ?? '').trim();
     const max = Math.max(0, Math.min(20, Number(limit) || 0));
     if (!q || !max) return of([]);
 
     return this.getSeriesList().pipe(
-      map((items) =>
-        items
-          .filter((s) => (s.name ?? '').toLowerCase().includes(q))
-          .slice(0, max),
-      ),
+        switchMap((items) => {
+          const directMatches = items.filter((s) => this.matchesSearchText(s.name, q));
+        if (directMatches.length >= max) {
+          return of(directMatches.slice(0, max));
+        }
+
+        const matchedFiles = new Set(directMatches.map((s) => s.file));
+        const remainingItems = items.filter((s) => !matchedFiles.has(s.file));
+        const remainingSlots = max - directMatches.length;
+
+        if (!remainingItems.length || remainingSlots <= 0) {
+          return of(directMatches.slice(0, max));
+        }
+
+        return from(remainingItems).pipe(
+          concatMap((series) =>
+            this.getVideosBySeries(series.file).pipe(
+                map((videos) =>
+                  videos.some((v) => this.matchesSearchText(v.title, q)) ? series : null,
+                ),
+              catchError(() => of(null)),
+            ),
+          ),
+          filter((series): series is SeriesListItem => Boolean(series)),
+          scan((acc: SeriesListItem[], series) => {
+            if (acc.length >= remainingSlots) return acc;
+            acc.push(series);
+            return acc;
+          }, []),
+          takeWhile((results) => results.length < remainingSlots, true),
+          last(),
+          map((videoTitleMatches) => directMatches.concat(videoTitleMatches).slice(0, max)),
+          defaultIfEmpty(directMatches.slice(0, max)),
+          catchError(() => of(directMatches.slice(0, max))),
+        );
+      }),
       catchError(() => of([])),
     );
   }

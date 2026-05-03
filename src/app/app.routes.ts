@@ -23,6 +23,10 @@ export const routes: Routes = [
         component: SeasonPage
     },
     {
+        path: 'series/:name/movie/:videoId',
+        component: SeasonPage
+    },
+    {
         path: 'series/:name',
         component: Series
     },

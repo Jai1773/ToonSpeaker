@@ -2,8 +2,8 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, DestroyRef, ElementRef, HostListener, Inject, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SeriesListItem, VideoService } from '../../services/video.service';
-import { Subscription } from 'rxjs';
+import { MovieSearchResult, SeriesListItem, VideoService } from '../../services/video.service';
+import { combineLatest, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -20,6 +20,7 @@ export class Navbar implements OnInit {
   scrolled = false;
   showSuggestions = false;
   suggestedSeries: SeriesListItem[] = [];
+  suggestedMovies: MovieSearchResult[] = [];
   searchFocused = false;
   private suggestTimer: ReturnType<typeof setTimeout> | null = null;
   private navigateTimer: ReturnType<typeof setTimeout> | null = null;
@@ -117,6 +118,7 @@ export class Navbar implements OnInit {
     const query = this.searchText.trim();
     if (!query) {
       this.suggestedSeries = [];
+      this.suggestedMovies = [];
       this.showSuggestions = false;
 
       if (this.router.url.startsWith('/search')) this.navigateBackFromSearch();
@@ -158,8 +160,12 @@ export class Navbar implements OnInit {
     if (!query) return;
 
     if (this.suggestSub) this.suggestSub.unsubscribe();
-    this.suggestSub = this.videoService.searchSeries(query, 6).subscribe((items) => {
-      this.suggestedSeries = items;
+    this.suggestSub = combineLatest([
+      this.videoService.searchSeries(query, 6),
+      this.videoService.searchMovieVideos(query, 6),
+    ]).subscribe(([seriesItems, movieItems]) => {
+      this.suggestedSeries = seriesItems;
+      this.suggestedMovies = movieItems;
     });
   }
 
@@ -219,5 +225,17 @@ export class Navbar implements OnInit {
 
     this.captureLastNonSearchBeforeSearch();
     this.router.navigate(['/series', name]);
+  }
+
+  selectMovie(movie: MovieSearchResult) {
+    const slug = (movie.seriesFile || '').replace(/\.json$/i, '');
+    if (!slug || !movie?.id) return;
+
+    this.searchText = movie.title;
+    this.closeSuggestions();
+    this.menuOpen = false;
+
+    this.captureLastNonSearchBeforeSearch();
+    this.router.navigate(['/series', slug, 'movie', movie.id]);
   }
 }

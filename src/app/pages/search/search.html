@@ -7,7 +7,18 @@
     Showing results for: <span class="q">{{ query }}</span>
   </p>
 
-  <div class="results" *ngIf="sections.length; else empty">
+  <div class="results" *ngIf="sections.length || movieResults.length; else empty">
+    <div class="result-section" *ngIf="movieResults.length">
+      <h2>Movies</h2>
+      <div class="movie-grid">
+        <app-video-card
+          *ngFor="let movie of movieResults"
+          [video]="movie"
+          (cardClick)="openMovie(movie)"
+        ></app-video-card>
+      </div>
+    </div>
+
     <div class="result-section" *ngFor="let section of sections">
       <h2>{{ section.title }}</h2>
       <div class="series-grid">
@@ -17,6 +28,6 @@
   </div>
 
   <ng-template #empty>
-    <p class="hint" *ngIf="query">No series found.</p>
+    <p class="hint" *ngIf="query">No results found.</p>
   </ng-template>
 </div>

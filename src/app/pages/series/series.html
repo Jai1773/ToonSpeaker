@@ -11,35 +11,46 @@
       />
       <div class="series-meta">
         <h1 class="title">{{ vm.seriesInfo.name }}</h1>
-        <p class="subtitle">{{ vm.seriesInfo.count }} episodes</p>
+        <p class="subtitle">{{ getCountLabel(vm.seriesInfo) }}</p>
       </div>
     </div>
 
-    <h2 class="episodes-title">Seasons</h2>
-    <div class="seasons" *ngIf="vm.seasons.length; else empty">
-      <a
-        class="season"
-        *ngFor="let s of vm.seasons"
-        [routerLink]="['/series', (vm.seriesFile || '').replace(/\.json$/i, ''), 'season', s.seasonNumber]"
-        [state]="vm.seriesFile ? { file: vm.seriesFile } : {}"
-      >
-        <img
-          class="season-thumb"
-          [src]="s.thumbnail || fallbackThumbnail"
-          [alt]="vm.seriesName + ' Season ' + s.seasonNumber"
-          loading="lazy"
-          decoding="async"
-          (error)="onImgError($event)"
-        />
-        <div class="season-meta">
-          <div class="season-title">Season {{ s.seasonNumber }}</div>
-          <div class="season-sub">{{ s.episodeCount }} episodes</div>
-        </div>
-      </a>
+    <h2 class="episodes-title">{{ isMovieType(vm.seriesInfo) ? 'Movies' : 'Seasons' }}</h2>
+
+    <div class="videos-grid" *ngIf="isMovieType(vm.seriesInfo); else seasonsBlock">
+      <app-video-card
+        *ngFor="let video of vm.videos"
+        [video]="video"
+        (cardClick)="openMovie(video, vm.seriesFile)"
+      ></app-video-card>
     </div>
 
+    <ng-template #seasonsBlock>
+      <div class="seasons" *ngIf="vm.seasons.length; else empty">
+        <a
+          class="season"
+          *ngFor="let s of vm.seasons"
+          [routerLink]="['/series', (vm.seriesFile || '').replace(/\.json$/i, ''), 'season', s.seasonNumber]"
+          [state]="vm.seriesFile ? { file: vm.seriesFile } : {}"
+        >
+          <img
+            class="season-thumb"
+            [src]="s.thumbnail || fallbackThumbnail"
+            [alt]="vm.seriesName + ' Season ' + s.seasonNumber"
+            loading="lazy"
+            decoding="async"
+            (error)="onImgError($event)"
+          />
+          <div class="season-meta">
+            <div class="season-title">Season {{ s.seasonNumber }}</div>
+            <div class="season-sub">{{ s.episodeCount }} episodes</div>
+          </div>
+        </a>
+      </div>
+    </ng-template>
+
     <ng-template #empty>
-      <p class="hint">No episodes found.</p>
+      <p class="hint">No {{ isMovieType(vm.seriesInfo) ? 'movies' : 'episodes' }} found.</p>
     </ng-template>
   </div>
 </ng-container>

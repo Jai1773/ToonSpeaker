@@ -1,25 +1,25 @@
 <div class="season-container" *ngIf="vm$ | async as vm">
 
   <a class="back" [routerLink]="['/series', (vm.seriesInfo?.file || '').replace(/\.json$/i, '')]">
-    Back to seasons
+    Back to {{ isMovieSeries(vm.seriesInfo) ? 'movies' : 'seasons' }}
   </a>
 
   <div class="header">
     <img
       class="thumb"
       [src]="vm.seasonInfo?.thumbnail || vm.seriesInfo?.thumbnail || fallbackThumbnail"
-      [alt]="(vm.seriesInfo?.name || '') + ' Season ' + vm.seasonInfo?.seasonNumber"
+      [alt]="isMovieSeries(vm.seriesInfo) ? (currentVideo?.title || vm.seriesInfo?.name || '') : ((vm.seriesInfo?.name || '') + ' Season ' + vm.seasonInfo?.seasonNumber)"
       loading="eager"
       decoding="async"
       (error)="onImgError($event)"
     />
     <div class="meta">
       <h1 class="title">
-        {{ vm.seriesInfo?.name || '' }} - Season {{ vm.seasonInfo?.seasonNumber }}
+        {{ isMovieSeries(vm.seriesInfo) ? (currentVideo?.title || vm.seriesInfo?.name || '') : ((vm.seriesInfo?.name || '') + ' - Season ' + vm.seasonInfo?.seasonNumber) }}
       </h1>
 
       <p class="subtitle" *ngIf="vm.seasonInfo?.episodeCount">
-        {{ vm.seasonInfo?.episodeCount }} episodes
+        {{ vm.seasonInfo?.episodeCount }} {{ isMovieSeries(vm.seriesInfo) ? 'movies' : 'episodes' }}
       </p>
     </div>
   </div>
@@ -72,19 +72,54 @@
     </div>
 
     <!-- EPISODES -->
-    <h2 class="episodes-title">Episodes</h2>
+    <h2 class="episodes-title">{{ isMovieSeries(vm.seriesInfo) ? 'More Like This' : 'Episodes' }}</h2>
 
-    <div class="episodes-number-grid">
-      <button
-        type="button"
-        class="episode-number"
-        *ngFor="let v of vm.episodes"
-        [class.active]="v.id === currentVideo.id"
-        (click)="selectEpisode(v)"
-      >
-        {{ v.episodeNumber }}
-      </button>
+    <div class="movie-grid" *ngIf="isMovieSeries(vm.seriesInfo); else episodeNumbers">
+      <div class="movie-card" *ngFor="let v of vm.episodes" [class.active]="v.id === currentVideo.id">
+        <app-video-card [video]="v" (cardClick)="openSeasonVideo(v, vm.seriesInfo?.file || '', true)"></app-video-card>
+      </div>
     </div>
+
+    <ng-template #episodeNumbers>
+      <div class="episodes-number-grid">
+        <button
+          type="button"
+          class="episode-number"
+          *ngFor="let v of vm.episodes"
+          [class.active]="v.id === currentVideo.id"
+          (click)="selectEpisode(v)"
+        >
+          {{ v.episodeNumber }}
+        </button>
+      </div>
+
+      <ng-container *ngIf="vm.nextSeasons?.length">
+        <h2 class="episodes-title">More Like This</h2>
+        <p class="season-hint">Next Seasons</p>
+
+        <div class="season-suggestions">
+          <a
+            class="season"
+            *ngFor="let s of vm.nextSeasons"
+            [routerLink]="['/series', (vm.seriesInfo?.file || '').replace(/\.json$/i, ''), 'season', s.seasonNumber]"
+            [state]="vm.seriesInfo?.file ? { file: vm.seriesInfo?.file } : {}"
+          >
+            <img
+              class="season-thumb"
+              [src]="s.thumbnail || fallbackThumbnail"
+              [alt]="(vm.seriesInfo?.name || '') + ' Season ' + s.seasonNumber"
+              loading="lazy"
+              decoding="async"
+              (error)="onImgError($event)"
+            />
+            <div class="season-meta">
+              <div class="season-title">Season {{ s.seasonNumber }}</div>
+              <div class="season-sub">{{ s.episodeCount }} episodes</div>
+            </div>
+          </a>
+        </div>
+      </ng-container>
+    </ng-template>
 
   </ng-container>
 

@@ -1,9 +1,26 @@
 [
   {
-    "name": "Ben 10 Omniverse",
+    "name": "Ben 10 Omniverse Multi Audio HD",
     "file": "ben10-omniverse.json",
     "thumbnail": "/assets/thambnails/seriesImages/omniverse.jpg",
     "type": "cartoon"
+  },
+  {
+    "name": "Shinchan Movies Collection Multi Audio HD",
+    "file": "shinchan-movies.json",
+    "thumbnail": "/assets/thambnails/seriesImages/shinchanMovieCollection.png",
+    "type": "movie"
+  },
+  {
+    "name": "Shinchan Spin-Off Multi Audio HD",
+    "file": "shinchan-spin-off.json",
+    "thumbnail": "/assets/thambnails/shinchanSeries/shinchanSpinOff1.jpeg",
+    "type": "anime"
+  },
+  {
+    "name": "Shinchan collection Multi Audio HD",
+    "file": "shinchan-series.json",
+    "thumbnail": "/assets/thambnails/shinchanSeries/shinchanSeason9.jpeg",
+    "type": "anime"
   }
 ]
-

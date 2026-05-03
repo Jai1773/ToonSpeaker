@@ -1,18 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   SeriesListItem,
+  SeriesType,
   SeriesVideoWithSeries,
   VideoService,
 } from '../../services/video.service';
+import { VideoCard } from '../../components/video-card/video-card';
 import { map, switchMap } from 'rxjs/operators';
-import { Observable, combineLatest, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 type SeriesHeaderInfo = {
   name: string;
   thumbnail: string;
   count: number;
+  type: SeriesType;
 };
 
 type SeasonSummary = {
@@ -24,12 +27,13 @@ type SeasonSummary = {
 @Component({
   selector: 'app-series',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, VideoCard],
   templateUrl: './series.html',
   styleUrls: ['./series.scss'],
 })
 export class Series {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly videoService = inject(VideoService);
 
   protected readonly fallbackThumbnail = '/assets/thambnails/placeholder.svg';
@@ -41,6 +45,7 @@ export class Series {
   vm$: Observable<{
     seriesInfo: SeriesHeaderInfo | null;
     seasons: SeasonSummary[];
+    videos: SeriesVideoWithSeries[];
     seriesName: string;
     seriesFile: string;
   }> = this.route.paramMap.pipe(
@@ -68,6 +73,7 @@ export class Series {
             return of({
               seriesInfo: null,
               seasons: [],
+              videos: [],
               seriesName: name,
               seriesFile: '',
             });
@@ -81,8 +87,10 @@ export class Series {
                 name: series.name,
                 thumbnail: series.thumbnail,
                 count: videos.length,
+                type: series.type,
               },
               seasons: this.buildSeasons(series, videos),
+              videos: this.sortVideos(videos),
               seriesName: name,
               seriesFile: series.file,
             }))
@@ -99,10 +107,38 @@ export class Series {
     img.src = this.fallbackThumbnail;
   }
 
+  protected isMovieType(seriesInfo: SeriesHeaderInfo | null): boolean {
+    return seriesInfo?.type === 'movie';
+  }
+
+  protected getCountLabel(seriesInfo: SeriesHeaderInfo | null): string {
+    if (!seriesInfo) return '';
+    return `${seriesInfo.count} ${seriesInfo.type === 'movie' ? 'movies' : 'episodes'}`;
+  }
+
+  protected openMovie(video: SeriesVideoWithSeries, seriesFile: string) {
+    if (!video || !seriesFile) return;
+
+    const slug = seriesFile.replace(/\.json$/i, '');
+    this.router.navigate(['/series', slug, 'movie', video.id], {
+      state: { file: seriesFile },
+    });
+  }
+
+  private sortVideos(videos: SeriesVideoWithSeries[]): SeriesVideoWithSeries[] {
+    return [...videos].sort((a, b) => {
+      if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber;
+      if (a.episodeNumber !== b.episodeNumber) return a.episodeNumber - b.episodeNumber;
+      return a.id - b.id;
+    });
+  }
+
   private buildSeasons(
     series: SeriesListItem,
     videos: SeriesVideoWithSeries[]
   ): SeasonSummary[] {
+    if (series.type === 'movie') return [];
+
     const bySeason = new Map<number, SeriesVideoWithSeries[]>();
 
     for (const v of videos) {

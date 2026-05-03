@@ -1,32 +1,50 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SeriesVideoStream, SeriesVideoWithSeries, VideoService } from '../../services/video.service';
 import { map, switchMap, tap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
+import { VideoCard } from '../../components/video-card/video-card';
+
+type SeasonSummary = {
+  seasonNumber: number;
+  episodeCount: number;
+  thumbnail: string;
+};
 
 @Component({
   selector: 'app-season',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, VideoCard],
   templateUrl: './season.html',
   styleUrls: ['./season.scss'],
 })
 export class SeasonPage {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private videoService = inject(VideoService);
   private sanitizer = inject(DomSanitizer);
 
   vm$: Observable<any>;
 
   constructor() {
-    this.vm$ = this.route.paramMap.pipe(
-      map((params) => ({
+    this.vm$ = combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(
+      map(([params, queryParams]) => ({
         name: params.get('name') ?? '',
-        season: Number(params.get('season') ?? '1'),
+        seasonParam: params.get('season'),
+        movieVideoId: Number(params.get('videoId') ?? '0'),
+        queryVideoId: Number(queryParams.get('video') ?? '0'),
       })),
-      switchMap(({ name, season }) => {
+      switchMap(({ name, seasonParam, movieVideoId, queryVideoId }) => {
+        const season = Number(seasonParam ?? '1');
+        const selectedVideoId =
+          Number.isFinite(movieVideoId) && movieVideoId > 0
+            ? movieVideoId
+            : Number.isFinite(queryVideoId) && queryVideoId > 0
+              ? queryVideoId
+              : 0;
+
         const resolved$ = this.videoService.getSeriesByName(name).pipe(
           switchMap((series) => {
             if (series) return of(series);
@@ -43,38 +61,59 @@ export class SeasonPage {
 
             return this.videoService.getVideosBySeries(series.file).pipe(
               map((videos) => {
-                const episodes = videos
-                  .filter((v) => v.seasonNumber === season)
-                  .sort((a, b) => a.episodeNumber - b.episodeNumber);
+                const isMovie = series.type === 'movie';
+                const episodes = (isMovie ? videos : videos.filter((v) => v.seasonNumber === season))
+                  .sort((a, b) => {
+                    if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber;
+                    if (a.episodeNumber !== b.episodeNumber) return a.episodeNumber - b.episodeNumber;
+                    return a.id - b.id;
+                  });
+                const nextSeasons = isMovie ? [] : this.buildNextSeasons(videos, season);
 
-                // ✅ FIX: create seasonInfo
                 const seasonInfo = {
-                  seasonNumber: season,
+                  seasonNumber: isMovie ? 1 : season,
                   episodeCount: episodes.length,
-                  thumbnail:
-                    episodes[0]?.thumbnail ||
-                    series.thumbnail ||
-                    ''
+                  thumbnail: episodes[0]?.thumbnail || series.thumbnail || '',
                 };
 
                 return {
                   seriesInfo: series,
                   seasonInfo,
                   episodes,
+                  nextSeasons,
+                  isMovie,
                 };
               }),
               tap((res) => {
                 if (!res?.episodes?.length) return;
+
+                if (res.isMovie && seasonParam) {
+                  const selectedMovie =
+                    res.episodes.find((e: SeriesVideoWithSeries) => e.id === selectedVideoId) ||
+                    res.episodes[0];
+                  this.openMovieRoute(selectedMovie, res.seriesInfo?.file || '', true);
+                  return;
+                }
+
+                if (Number.isFinite(selectedVideoId) && selectedVideoId > 0) {
+                  const selectedFromRoute = res.episodes.find(
+                    (e: SeriesVideoWithSeries) => e.id === selectedVideoId
+                  );
+                  if (selectedFromRoute) {
+                    this.selectEpisode(selectedFromRoute);
+                    return;
+                  }
+                }
 
                 const seriesFile = res.seriesInfo?.file || '';
                 const prefs = seriesFile ? this.loadPrefs(seriesFile) : null;
 
                 if (
                   prefs?.lastWatchedEpisodeId &&
-                  prefs?.lastWatchedSeasonNumber === season
+                  (res.isMovie || prefs?.lastWatchedSeasonNumber === season)
                 ) {
                   const found = res.episodes.find(
-                    (e: any) => e.id === prefs.lastWatchedEpisodeId
+                    (e: SeriesVideoWithSeries) => e.id === prefs.lastWatchedEpisodeId
                   );
                   if (found) {
                     this.selectEpisode(found);
@@ -98,12 +137,12 @@ export class SeasonPage {
 
   servers: { id: string; label: string; streams: SeriesVideoStream[] }[] = [];
   selectedServerIndex = 0;
-  selectedServerId: string = '';
+  selectedServerId = '';
 
   availableAudios: string[] = [];
-  selectedAudio: string = '';
+  selectedAudio = '';
 
-  hasAudioDetails: boolean = false;
+  hasAudioDetails = false;
 
   selectEpisode(video: SeriesVideoWithSeries) {
     this.currentVideo = video;
@@ -171,9 +210,7 @@ export class SeasonPage {
 
     if (prefs) {
       if (prefs.selectedServerId) {
-        const idx = this.servers.findIndex(
-          (s) => s.id === prefs.selectedServerId
-        );
+        const idx = this.servers.findIndex((s) => s.id === prefs.selectedServerId);
         if (idx >= 0) {
           this.selectedServerIndex = idx;
           this.selectedServerId = this.servers[idx].id;
@@ -183,8 +220,7 @@ export class SeasonPage {
 
       if (prefs.selectedAudio) {
         const found = this.availableAudios.find(
-          (a) =>
-            a.toLowerCase() === prefs.selectedAudio!.toLowerCase()
+          (a) => a.toLowerCase() === prefs.selectedAudio!.toLowerCase()
         );
         if (found) this.selectedAudio = found;
       }
@@ -192,7 +228,6 @@ export class SeasonPage {
 
     this.updateVideo();
 
-    // ✅ FIX: better audio detection
     this.hasAudioDetails = this.availableAudios.some(
       (a) => a && a.toLowerCase() !== 'unknown'
     );
@@ -212,9 +247,7 @@ export class SeasonPage {
     this.availableAudios = Array.from(audioSet);
 
     this.selectedAudio =
-      this.availableAudios.find(
-        (a) => a.toLowerCase() === 'tamil'
-      ) || this.availableAudios[0];
+      this.availableAudios.find((a) => a.toLowerCase() === 'tamil') || this.availableAudios[0];
   }
 
   private updateVideo() {
@@ -223,9 +256,7 @@ export class SeasonPage {
 
     const stream =
       server.streams.find(
-        (s) =>
-          (s as any).audio?.toLowerCase() ===
-          this.selectedAudio.toLowerCase()
+        (s) => (s as any).audio?.toLowerCase() === this.selectedAudio.toLowerCase()
       ) || server.streams[0];
 
     this.safeVideoUrl = this.sanitize(stream.url);
@@ -295,5 +326,63 @@ export class SeasonPage {
 
   onImgError(event: Event) {
     (event.target as HTMLImageElement).src = this.fallbackThumbnail;
+  }
+
+  protected isMovieSeries(seriesInfo: { type?: string } | null | undefined): boolean {
+    return seriesInfo?.type === 'movie';
+  }
+
+  protected openSeasonVideo(video: SeriesVideoWithSeries, seriesFile: string, isMovie = false) {
+    if (!video || !seriesFile) return;
+
+    if (isMovie) {
+      this.openMovieRoute(video, seriesFile);
+      return;
+    }
+
+    const slug = seriesFile.replace(/\.json$/i, '');
+    this.router.navigate(['/series', slug, 'season', video.seasonNumber], {
+      state: { file: seriesFile },
+      queryParams: { video: video.id },
+    });
+  }
+
+  private openMovieRoute(
+    video: SeriesVideoWithSeries,
+    seriesFile: string,
+    replaceUrl = false
+  ) {
+    if (!video || !seriesFile) return;
+
+    const slug = seriesFile.replace(/\.json$/i, '');
+    this.router.navigate(['/series', slug, 'movie', video.id], {
+      state: { file: seriesFile },
+      replaceUrl,
+    });
+  }
+
+  private buildNextSeasons(
+    videos: SeriesVideoWithSeries[],
+    currentSeason: number
+  ): SeasonSummary[] {
+    const bySeason = new Map<number, SeriesVideoWithSeries[]>();
+
+    for (const video of videos) {
+      const seasonNumber = Number(video.seasonNumber);
+      if (!Number.isFinite(seasonNumber) || seasonNumber <= currentSeason) continue;
+
+      const items = bySeason.get(seasonNumber);
+      if (items) items.push(video);
+      else bySeason.set(seasonNumber, [video]);
+    }
+
+    return [...bySeason.entries()]
+      .map(([seasonNumber, items]) => ({
+        seasonNumber,
+        episodeCount: items.length,
+        thumbnail:
+          items.find((item) => typeof item.thumbnail === 'string' && item.thumbnail)?.thumbnail || '',
+      }))
+      .sort((a, b) => a.seasonNumber - b.seasonNumber);
   }
 }

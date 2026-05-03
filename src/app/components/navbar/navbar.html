@@ -29,6 +29,22 @@
       />
 
       <div class="suggestions" *ngIf="showSuggestions">
+        <div class="suggestion-section" *ngIf="suggestedMovies.length">
+          <div class="section-title">Movies</div>
+          <button
+            class="suggestion-item"
+            type="button"
+            *ngFor="let movie of suggestedMovies"
+            (click)="selectMovie(movie)"
+          >
+            <span class="text text-block">
+              <span class="primary">{{ movie.title }}</span>
+              <span class="secondary">{{ movie.seriesName }}</span>
+            </span>
+            <span class="meta">movie</span>
+          </button>
+        </div>
+
         <div class="suggestion-section" *ngIf="suggestedSeries.length">
           <div class="section-title">Series</div>
           <button
