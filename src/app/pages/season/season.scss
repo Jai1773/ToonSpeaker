@@ -76,6 +76,7 @@
   border: 1px solid var(--border-0);
   background: rgba(255, 255, 255, 0.04);
   box-shadow: 0 16px 55px rgba(0, 0, 0, 0.35);
+  outline: none;
 }
 
 .player iframe {
@@ -273,11 +274,6 @@
   transition: transform 180ms ease;
 }
 
-.movie-card.active {
-  outline: 2px solid rgba(56, 189, 248, 0.65);
-  outline-offset: 4px;
-}
-
 /* NUMBER BUTTON */
 .episode-number {
   padding: 10px 0;
@@ -294,13 +290,6 @@
 .episode-number:hover {
   background: rgba(56, 189, 248, 0.15);
   border-color: rgba(56, 189, 248, 0.3);
-}
-
-/* ACTIVE */
-.episode-number.active {
-  background: #38bdf8;
-  color: black;
-  border-color: #38bdf8;
 }
 
 /* HINT TEXT */

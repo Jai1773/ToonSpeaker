@@ -5,7 +5,54 @@
   <title>ToonSpeaker</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Watch cartoons, anime and movies with multi-audio support. Stream popular series and discover new episodes on ToonSpeaker." />
+  <meta name="keywords" content="cartoons, anime, watch online, free streaming, ToonSpeaker, movies, series" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://toon-speaker.vercel.app/" />
   <link rel="icon" type="image/png" href="/assets/thambnails/mainLogo/mainLogo.png">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="ToonSpeaker" />
+  <meta property="og:description" content="Watch cartoons, anime and movies with multi-audio support. Stream popular series and discover new episodes on ToonSpeaker." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://toon-speaker.vercel.app/" />
+  <meta property="og:image" content="https://toon-speaker.vercel.app/assets/thambnails/mainLogo/mainLogo.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ToonSpeaker" />
+  <meta name="twitter:description" content="Watch cartoons, anime and movies with multi-audio support." />
+  <meta name="twitter:image" content="https://toon-speaker.vercel.app/assets/thambnails/mainLogo/mainLogo.png" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://toon-speaker.vercel.app/#website",
+        "url": "https://toon-speaker.vercel.app/",
+        "name": "ToonSpeaker",
+        "description": "Watch cartoons, anime and movies with multi-audio support.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://toon-speaker.vercel.app/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://toon-speaker.vercel.app/#org",
+        "name": "ToonSpeaker",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://toon-speaker.vercel.app/assets/thambnails/mainLogo/mainLogo.png"
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <app-root></app-root>

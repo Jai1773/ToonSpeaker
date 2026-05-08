@@ -27,6 +27,22 @@ const indexHtmlPath = browserDistFolder
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+// Lightweight health check (helps uptime monitors and avoids slow first requests)
+app.get('/health', (_req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.status(200).send('ok');
+});
+
+// Add Cache-Control for HTML responses to allow CDNs to cache SSR output briefly.
+app.use((req, res, next) => {
+  const accept = (req.headers['accept'] || '') as string;
+  if (accept.includes('text/html')) {
+    // s-maxage controls CDN (Vercel) caching; max-age for browsers.
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=60');
+  }
+  next();
+});
+
 /**
  * Serve static files ONLY in production
  */

@@ -92,6 +92,7 @@ export class VideoPlayer implements OnInit {
       }
 
       this.setPlaybackOptions(this.video);
+      this.injectJsonLd();
     });
   }
 
@@ -187,6 +188,47 @@ export class VideoPlayer implements OnInit {
     const picked = candidates[0] ?? streams[0];
     const url = picked?.url || this.video.videoUrl;
     this.safeUrl = this.toSafeResourceUrl(url);
+    this.injectJsonLd();
+  }
+
+  private buildVideoJsonLd() {
+    if (!this.video) return null;
+
+    const id = this.video.id;
+    const pageUrl = `https://toon-speaker.vercel.app/watch/${id}`;
+    const embedUrl = (this.normalizedStreams && this.normalizedStreams[0] && this.normalizedStreams[0].url) || this.video.videoUrl;
+
+    const json: any = {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "name": this.video.title,
+      "description": this.video.title,
+      "thumbnailUrl": "https://toon-speaker.vercel.app/assets/thambnails/mainLogo/mainLogo.png",
+      "embedUrl": embedUrl,
+      "url": pageUrl
+    };
+
+    return json;
+  }
+
+  private injectJsonLd() {
+    if (typeof document === 'undefined') return;
+
+    try {
+      const existing = document.getElementById('video-jsonld');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      const json = this.buildVideoJsonLd();
+      if (!json) return;
+
+      const s = document.createElement('script');
+      s.type = 'application/ld+json';
+      s.id = 'video-jsonld';
+      s.text = JSON.stringify(json);
+      document.head.appendChild(s);
+    } catch (e) {
+      // ignore DOM errors (e.g., during some server-side renders)
+    }
   }
 
   private toSafeResourceUrl(url: unknown): SafeResourceUrl | null {

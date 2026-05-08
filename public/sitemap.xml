@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Generated for https://toon-speaker.vercel.app -->
+  <url>
+    <loc>https://toon-speaker.vercel.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/search</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/type/cartoons</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/type/anime</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/type/movies</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Series pages (generated from assets/data/series.json) -->
+  <url>
+    <loc>https://toon-speaker.vercel.app/series/ben10-omniverse</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/series/shinchan-movies</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/series/shinchan-spin-off</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://toon-speaker.vercel.app/series/shinchan-series</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Note: For full coverage, include every individual watch/video URL (e.g. /watch/{id}) or generate a dynamic sitemap during your build.
+       Replace the placeholder domain and optionally add lastmod tags per-URL. -->
+</urlset>

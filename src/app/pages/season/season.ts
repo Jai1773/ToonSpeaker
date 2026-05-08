@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SeriesVideoStream, SeriesVideoWithSeries, VideoService } from '../../services/video.service';
@@ -21,6 +21,8 @@ type SeasonSummary = {
   styleUrls: ['./season.scss'],
 })
 export class SeasonPage {
+  @ViewChild('playerSection') private playerSection?: ElementRef<HTMLElement>;
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private videoService = inject(VideoService);
@@ -144,9 +146,10 @@ export class SeasonPage {
 
   hasAudioDetails = false;
 
-  selectEpisode(video: SeriesVideoWithSeries) {
+  selectEpisode(video: SeriesVideoWithSeries, options?: { focusPlayer?: boolean }) {
     this.currentVideo = video;
     this.setPlaybackOptions(video);
+    if (options?.focusPlayer) this.focusPlayer();
 
     const seriesFile = video.seriesFile || '';
     if (seriesFile) {
@@ -320,6 +323,16 @@ export class SeasonPage {
 
   private sanitize(url: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  private focusPlayer() {
+    setTimeout(() => {
+      const player = this.playerSection?.nativeElement;
+      if (!player) return;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      player.focus({ preventScroll: true });
+    });
   }
 
   fallbackThumbnail = '/assets/thambnails/placeholder.svg';

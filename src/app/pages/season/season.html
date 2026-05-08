@@ -28,7 +28,7 @@
   <ng-container *ngIf="currentVideo; else empty">
 
     <!-- PLAYER -->
-    <div class="player">
+    <div class="player" #playerSection tabindex="-1">
       <iframe
         *ngIf="safeVideoUrl; else unsafeVideo"
         [src]="safeVideoUrl"
@@ -75,7 +75,7 @@
     <h2 class="episodes-title">{{ isMovieSeries(vm.seriesInfo) ? 'More Like This' : 'Episodes' }}</h2>
 
     <div class="movie-grid" *ngIf="isMovieSeries(vm.seriesInfo); else episodeNumbers">
-      <div class="movie-card" *ngFor="let v of vm.episodes" [class.active]="v.id === currentVideo.id">
+      <div class="movie-card" *ngFor="let v of vm.episodes">
         <app-video-card [video]="v" (cardClick)="openSeasonVideo(v, vm.seriesInfo?.file || '', true)"></app-video-card>
       </div>
     </div>
@@ -86,8 +86,7 @@
           type="button"
           class="episode-number"
           *ngFor="let v of vm.episodes"
-          [class.active]="v.id === currentVideo.id"
-          (click)="selectEpisode(v)"
+          (click)="selectEpisode(v, { focusPlayer: true })"
         >
           {{ v.episodeNumber }}
         </button>

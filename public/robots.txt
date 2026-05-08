@@ -1,0 +1,5 @@
+User-agent: *
+Disallow:
+
+# No crawl-delay configured to allow faster indexing by major search engines
+Sitemap: https://toon-speaker.vercel.app/sitemap.xml
