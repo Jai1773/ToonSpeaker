@@ -87,6 +87,8 @@
           class="episode-number"
           *ngFor="let v of vm.episodes"
           (click)="selectEpisode(v, { focusPlayer: true })"
+          [class.active]="v.id === currentVideo.id"
+          [attr.aria-current]="v.id === currentVideo.id ? 'true' : null"
         >
           {{ v.episodeNumber }}
         </button>

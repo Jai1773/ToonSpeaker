@@ -22,5 +22,11 @@
     "file": "shinchan-series.json",
     "thumbnail": "/assets/thambnails/shinchanSeries/shinchanSeason9.jpeg",
     "type": "anime"
+  },
+  {
+    "name": "Solo Leveling English Subbed & Dubbed Multi Audio HD",
+    "file": "solo-leveling.json",
+    "thumbnail": "/assets/thambnails/seriesImages/soloLeveling.jpg",
+    "type": "anime"
   }
 ]

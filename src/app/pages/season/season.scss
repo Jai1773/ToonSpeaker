@@ -292,6 +292,14 @@
   border-color: rgba(56, 189, 248, 0.3);
 }
 
+/* Active/selected episode */
+.episode-number.active {
+  background: rgba(56, 189, 248, 0.20);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.08);
+}
+
 /* HINT TEXT */
 .hint {
   margin: 0 0 18px;
