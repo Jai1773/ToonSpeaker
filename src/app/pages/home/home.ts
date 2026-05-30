@@ -3,6 +3,7 @@ import { AfterViewInit, Component, DestroyRef, ElementRef, HostListener, ViewChi
 import { Hero } from "../../components/hero/hero";
 import { SeriesCard } from "../../components/series-card/series-card";
 import { SeriesListItem, VideoService } from '../../services/video.service';
+import { ApiService } from '../../services/api.service';
 import { Observable, map } from 'rxjs';
 import { RouterLink } from '@angular/router';
 
@@ -26,6 +27,7 @@ type HomeCategory = {
 })
 export class Home implements AfterViewInit {
   private readonly videoService = inject(VideoService);
+  private readonly apiService = inject(ApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('trendingRow') private trendingRow?: ElementRef<HTMLElement>;
@@ -34,7 +36,17 @@ export class Home implements AfterViewInit {
   trendingScrollable = false;
   popularScrollable = false;
 
-  readonly series$: Observable<SeriesListItem[]> = this.videoService.getSeriesList();
+  readonly series$: Observable<SeriesListItem[]> = this.apiService.getDashboard().pipe(
+    map((apiItems) => {
+      console.log('Dashboard API Response:', apiItems);
+      return apiItems.map((item) => ({
+        name: item.name,
+        thumbnail: item.thumbnail,
+        type: item.type,
+        file: item.id,
+      }));
+    })
+  );
   readonly trending$: Observable<SeriesListItem[]> = this.series$;
   readonly popular$: Observable<SeriesListItem[]> = this.series$;
   readonly categories$: Observable<HomeCategory[]> = this.series$.pipe(

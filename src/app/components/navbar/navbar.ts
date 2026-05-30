@@ -27,6 +27,7 @@ export class Navbar implements OnInit {
   private suggestSub: Subscription | null = null;
   private lastNonSearchUrl = '/';
   private readonly lastNonSearchUrlKey = 'toonSpeaker:lastNonSearchUrl';
+  private suppressSuggestions = false;
 
   constructor(
     private router: Router,
@@ -42,6 +43,9 @@ export class Navbar implements OnInit {
 
     const sub = this.router.events.subscribe((event) => {
       if (!(event instanceof NavigationEnd)) return;
+
+      // Reset any temporary suppression once navigation completes.
+      this.suppressSuggestions = false;
 
       if (!event.urlAfterRedirects.startsWith('/search')) {
         this.setLastNonSearchUrl(event.urlAfterRedirects);
@@ -114,6 +118,8 @@ export class Navbar implements OnInit {
   onSearchInput() {
     if (this.suggestTimer) clearTimeout(this.suggestTimer);
     if (this.navigateTimer) clearTimeout(this.navigateTimer);
+
+    if (this.suppressSuggestions) return;
 
     const query = this.searchText.trim();
     if (!query) {
@@ -218,13 +224,19 @@ export class Navbar implements OnInit {
     this.router.navigateByUrl(target, { replaceUrl: true });
   }
 
-  selectSeries(name: string) {
-    this.searchText = name;
+  selectSeries(item: SeriesListItem) {
+    if (!item) return;
+
+    const slug = ((item.file ?? item.name) || '').replace(/\.json$/i, '').trim();
+    if (!slug) return;
+
+    this.searchText = item.name || '';
     this.closeSuggestions();
     this.menuOpen = false;
-
     this.captureLastNonSearchBeforeSearch();
-    this.router.navigate(['/series', name]);
+    // Suppress suggestion updates while navigating so the click doesn't trigger a follow-up filter.
+    this.suppressSuggestions = true;
+    this.router.navigate(['/series', slug]);
   }
 
   selectMovie(movie: MovieSearchResult) {
@@ -234,8 +246,8 @@ export class Navbar implements OnInit {
     this.searchText = movie.title;
     this.closeSuggestions();
     this.menuOpen = false;
-
     this.captureLastNonSearchBeforeSearch();
+    this.suppressSuggestions = true;
     this.router.navigate(['/series', slug, 'movie', movie.id]);
   }
 }

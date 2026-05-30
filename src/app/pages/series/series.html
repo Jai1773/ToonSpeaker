@@ -12,6 +12,9 @@
       <div class="series-meta">
         <h1 class="title">{{ vm.seriesInfo.name }}</h1>
         <p class="subtitle">{{ getCountLabel(vm.seriesInfo) }}</p>
+        <p class="description" *ngIf="vm.seriesInfo.description">
+          {{ vm.seriesInfo.description }}
+        </p>
       </div>
     </div>
 

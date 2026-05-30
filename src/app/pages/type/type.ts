@@ -5,7 +5,7 @@ import { SeriesCard } from '../../components/series-card/series-card';
 import { SeriesListItem, VideoService } from '../../services/video.service';
 import { Observable, map, switchMap } from 'rxjs';
 
-type BrowseType = 'cartoons' | 'anime' | 'movies';
+type BrowseType = 'cartoon' | 'anime' | 'movie';
 type VideoType = 'cartoon' | 'anime' | 'movie';
 
 @Component({
@@ -24,13 +24,12 @@ export class TypePage {
       map((params) => {
         const raw = (params.get('type') ?? '').trim().toLowerCase();
         const type: BrowseType =
-          raw === 'anime' ? 'anime' : raw === 'movies' ? 'movies' : 'cartoons';
+          raw === 'anime' ? 'anime' : raw === 'movie' ? 'movie' : 'cartoon';
 
         const heading =
-          type === 'anime' ? 'Anime' : type === 'movies' ? 'Movies' : 'Cartoons';
+          type === 'anime' ? 'Anime' : type === 'movie' ? 'Movies' : 'Cartoons';
 
-        const serviceType: VideoType =
-          type === 'anime' ? 'anime' : type === 'movies' ? 'movie' : 'cartoon';
+        const serviceType: VideoType = type;
 
         return { heading, type, serviceType };
       }),

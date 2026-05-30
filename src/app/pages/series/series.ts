@@ -7,6 +7,7 @@ import {
   SeriesVideoWithSeries,
   VideoService,
 } from '../../services/video.service';
+import { ApiService } from '../../services/api.service';
 import { VideoCard } from '../../components/video-card/video-card';
 import { map, switchMap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
@@ -16,6 +17,7 @@ type SeriesHeaderInfo = {
   thumbnail: string;
   count: number;
   type: SeriesType;
+  description?: string;
 };
 
 type SeasonSummary = {
@@ -34,7 +36,7 @@ type SeasonSummary = {
 export class Series {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly videoService = inject(VideoService);
+  private readonly apiService = inject(ApiService);
 
   protected readonly fallbackThumbnail = '/assets/thambnails/placeholder.svg';
 
@@ -53,47 +55,37 @@ export class Series {
       const raw = (params.get('name') ?? '').trim();
       return this.safeDecodeURIComponent(raw);
     }),
-    switchMap((name) => {
-      this.seriesName = name;
+    switchMap((id) => {
+      this.seriesName = id;
 
-      // First try resolving by human-readable name; if that fails,
-      // treat the param as a slug (series file basename) and try
-      // getSeriesByFile(slug + '.json').
-      const resolveSeries$ = this.videoService.getSeriesByName(name).pipe(
-        switchMap((series) => {
-          if (series) return of(series);
-          const file = name.toLowerCase().endsWith('.json') ? name : `${name}.json`;
-          return this.videoService.getSeriesByFile(file);
-        })
-      );
+      return this.apiService.getSeries(id).pipe(
+        switchMap((apiVideos) => {
+          const videos = apiVideos.map((v) => ({
+            ...v,
+            seriesFile: id,
+          })) as SeriesVideoWithSeries[];
 
-      return resolveSeries$.pipe(
-        switchMap((series) => {
-          if (!series) {
-            return of({
-              seriesInfo: null,
-              seasons: [],
-              videos: [],
-              seriesName: name,
-              seriesFile: '',
-            });
-          }
+          return this.apiService.getDashboard().pipe(
+            map((list) => {
+              const seriesItem = list.find((s) => s.id === id) ||
+                                 list.find((s) => s.name.toLowerCase().includes(id.toLowerCase()));
 
-          this.seriesFile = series.file;
-
-          return this.videoService.getVideosBySeries(series.file).pipe(
-            map((videos) => ({
-              seriesInfo: {
-                name: series.name,
-                thumbnail: series.thumbnail,
+              const seriesInfo: SeriesHeaderInfo = {
+                name: seriesItem?.name || id,
+                thumbnail: videos[0]?.thumbnail || seriesItem?.thumbnail || this.fallbackThumbnail,
                 count: videos.length,
-                type: series.type,
-              },
-              seasons: this.buildSeasons(series, videos),
-              videos: this.sortVideos(videos),
-              seriesName: name,
-              seriesFile: series.file,
-            }))
+                type: seriesItem?.type || 'cartoon',
+                description: videos[0]?.description,
+              };
+
+              return {
+                seriesInfo,
+                seasons: this.buildSeasons({ name: seriesInfo.name, thumbnail: seriesInfo.thumbnail, type: seriesInfo.type, file: id }, videos),
+                videos: this.sortVideos(videos),
+                seriesName: seriesInfo.name,
+                seriesFile: id,
+              };
+            })
           );
         })
       );

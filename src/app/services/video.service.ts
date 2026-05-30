@@ -17,6 +17,7 @@ import {
   take,
   takeWhile,
 } from 'rxjs';
+import { ApiService } from './api.service';
 
 export type SeriesType = 'cartoon' | 'anime' | 'movie';
 
@@ -79,6 +80,7 @@ export class VideoService {
 
   private seriesList$?: Observable<SeriesListItem[]>;
   private readonly seriesVideosCache = new Map<string, Observable<SeriesVideoWithSeries[]>>();
+  private readonly apiService = inject(ApiService);
 
   private toFinitePositiveInt(value: unknown): number | null {
     const n = Number(value);
@@ -215,9 +217,19 @@ export class VideoService {
           }),
         ),
         catchError(() => {
-          // If the request fails (e.g., 404 due to bad base URL), don't permanently cache the empty result.
+          // If asset fetch fails, try the backend API that `Home` uses.
           this.seriesList$ = undefined;
-          return of([] as SeriesListItem[]);
+          return this.apiService.getDashboard().pipe(
+            map((apiItems) =>
+              (Array.isArray(apiItems) ? apiItems : []).map((item) => ({
+                name: item.name,
+                thumbnail: item.thumbnail,
+                type: item.type as SeriesType,
+                file: item.id,
+              })) as SeriesListItem[],
+            ),
+            catchError(() => of([] as SeriesListItem[])),
+          );
         }),
       ),
     ).pipe(shareReplay({ bufferSize: 1, refCount: false }));

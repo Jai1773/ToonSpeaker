@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { SeriesVideoStream, SeriesVideoWithSeries, VideoService } from '../../services/video.service';
+import { SeriesVideoStream, SeriesVideoWithSeries } from '../../services/video.service';
+import { ApiService, ApiSeriesVideo } from '../../services/api.service';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { Observable, combineLatest, of } from 'rxjs';
 import { VideoCard } from '../../components/video-card/video-card';
@@ -25,7 +26,7 @@ export class SeasonPage {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private videoService = inject(VideoService);
+  private apiService = inject(ApiService);
   private sanitizer = inject(DomSanitizer);
 
   vm$: Observable<any>;
@@ -47,24 +48,24 @@ export class SeasonPage {
               ? queryVideoId
               : 0;
 
-        const resolved$ = this.videoService.getSeriesByName(name).pipe(
-          switchMap((series) => {
-            if (series) return of(series);
-            const file = name.toLowerCase().endsWith('.json') ? name : `${name}.json`;
-            return this.videoService.getSeriesByFile(file);
-          })
-        );
+        return this.apiService.getSeries(name).pipe(
+          switchMap((apiVideos) => {
+            const videos = apiVideos.map((v) => ({
+              ...v,
+              seriesFile: name,
+            })) as SeriesVideoWithSeries[];
 
-        return resolved$.pipe(
-          switchMap((series) => {
-            if (!series) {
-              return of({ seriesInfo: null, seasonInfo: null, episodes: [] });
-            }
+            return this.apiService.getDashboard().pipe(
+              map((list) => {
+                const seriesItem = list.find((s) => s.id === name) ||
+                                   list.find((s) => s.name.toLowerCase().includes(name.toLowerCase()));
 
-            return this.videoService.getVideosBySeries(series.file).pipe(
-              map((videos) => {
-                const isMovie = series.type === 'movie';
-                const episodes = (isMovie ? videos : videos.filter((v) => v.seasonNumber === season))
+                if (!seriesItem) {
+                  return { seriesInfo: null, seasonInfo: null, episodes: [] };
+                }
+
+                const isMovie = seriesItem.type === 'movie';
+                const filteredEpisodes = (isMovie ? videos : videos.filter((v) => v.seasonNumber === season))
                   .sort((a, b) => {
                     if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber;
                     if (a.episodeNumber !== b.episodeNumber) return a.episodeNumber - b.episodeNumber;
@@ -74,58 +75,58 @@ export class SeasonPage {
 
                 const seasonInfo = {
                   seasonNumber: isMovie ? 1 : season,
-                  episodeCount: episodes.length,
-                  thumbnail: episodes[0]?.thumbnail || series.thumbnail || '',
+                  episodeCount: filteredEpisodes.length,
+                  thumbnail: filteredEpisodes[0]?.thumbnail || seriesItem.thumbnail || '',
                 };
 
                 return {
-                  seriesInfo: series,
+                  seriesInfo: seriesItem,
                   seasonInfo,
-                  episodes,
+                  episodes: filteredEpisodes,
                   nextSeasons,
                   isMovie,
                 };
-              }),
-              tap((res) => {
-                if (!res?.episodes?.length) return;
-
-                if (res.isMovie && seasonParam) {
-                  const selectedMovie =
-                    res.episodes.find((e: SeriesVideoWithSeries) => e.id === selectedVideoId) ||
-                    res.episodes[0];
-                  this.openMovieRoute(selectedMovie, res.seriesInfo?.file || '', true);
-                  return;
-                }
-
-                if (Number.isFinite(selectedVideoId) && selectedVideoId > 0) {
-                  const selectedFromRoute = res.episodes.find(
-                    (e: SeriesVideoWithSeries) => e.id === selectedVideoId
-                  );
-                  if (selectedFromRoute) {
-                    this.selectEpisode(selectedFromRoute);
-                    return;
-                  }
-                }
-
-                const seriesFile = res.seriesInfo?.file || '';
-                const prefs = seriesFile ? this.loadPrefs(seriesFile) : null;
-
-                if (
-                  prefs?.lastWatchedEpisodeId &&
-                  (res.isMovie || prefs?.lastWatchedSeasonNumber === season)
-                ) {
-                  const found = res.episodes.find(
-                    (e: SeriesVideoWithSeries) => e.id === prefs.lastWatchedEpisodeId
-                  );
-                  if (found) {
-                    this.selectEpisode(found);
-                    return;
-                  }
-                }
-
-                this.selectEpisode(res.episodes[0]);
               })
             );
+          }),
+          tap((res) => {
+            if (!res?.episodes?.length) return;
+
+            if (res.isMovie && seasonParam) {
+              const selectedMovie =
+                res.episodes.find((e: SeriesVideoWithSeries) => e.id === selectedVideoId) ||
+                res.episodes[0];
+              this.openMovieRoute(selectedMovie, res.seriesInfo?.id || '', true);
+              return;
+            }
+
+            if (Number.isFinite(selectedVideoId) && selectedVideoId > 0) {
+              const selectedFromRoute = res.episodes.find(
+                (e: SeriesVideoWithSeries) => e.id === selectedVideoId
+              );
+              if (selectedFromRoute) {
+                this.selectEpisode(selectedFromRoute);
+                return;
+              }
+            }
+
+            const seriesFile = res.seriesInfo?.id || '';
+            const prefs = seriesFile ? this.loadPrefs(seriesFile) : null;
+
+            if (
+              prefs?.lastWatchedEpisodeId &&
+              (res.isMovie || prefs?.lastWatchedSeasonNumber === season)
+            ) {
+              const found = res.episodes.find(
+                (e: SeriesVideoWithSeries) => e.id === prefs.lastWatchedEpisodeId
+              );
+              if (found) {
+                this.selectEpisode(found);
+                return;
+              }
+            }
+
+            this.selectEpisode(res.episodes[0]);
           })
         );
       })

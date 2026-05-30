@@ -10,9 +10,9 @@
 
   <div class="menu" [class.open]="menuOpen">
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-    <a routerLink="/type/cartoons" routerLinkActive="active">Cartoons</a>
+    <a routerLink="/type/cartoon" routerLinkActive="active">Cartoons</a>
     <a routerLink="/type/anime" routerLinkActive="active">Anime</a>
-    <a routerLink="/type/movies" routerLinkActive="active">Movies</a>
+    <a routerLink="/type/movie" routerLinkActive="active">Movies</a>
   </div>
 
   <div class="right">
@@ -29,13 +29,13 @@
       />
 
       <div class="suggestions" *ngIf="showSuggestions">
-        <div class="suggestion-section" *ngIf="suggestedMovies.length">
+          <div class="suggestion-section" *ngIf="suggestedMovies.length">
           <div class="section-title">Movies</div>
           <button
             class="suggestion-item"
             type="button"
             *ngFor="let movie of suggestedMovies"
-            (click)="selectMovie(movie)"
+            (mousedown)="selectMovie(movie); $event.preventDefault()"
           >
             <span class="text text-block">
               <span class="primary">{{ movie.title }}</span>
@@ -45,13 +45,13 @@
           </button>
         </div>
 
-        <div class="suggestion-section" *ngIf="suggestedSeries.length">
+          <div class="suggestion-section" *ngIf="suggestedSeries.length">
           <div class="section-title">Series</div>
           <button
             class="suggestion-item"
             type="button"
             *ngFor="let s of suggestedSeries"
-            (click)="selectSeries(s.name)"
+            (mousedown)="selectSeries(s); $event.preventDefault()"
           >
             <span class="text">{{ s.name }}</span>
             <span class="meta">{{ s.type }}</span>

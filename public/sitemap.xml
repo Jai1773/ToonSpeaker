@@ -12,7 +12,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://toon-speaker.vercel.app/type/cartoons</loc>
+    <loc>https://toon-speaker.vercel.app/type/cartoon</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -22,7 +22,7 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://toon-speaker.vercel.app/type/movies</loc>
+    <loc>https://toon-speaker.vercel.app/type/movie</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
