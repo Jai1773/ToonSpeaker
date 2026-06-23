@@ -175,11 +175,7 @@ export class VideoService {
 
   private getJsonWithFallback<T>(primaryUrl: string, fallbackUrl: string): Observable<T> {
     return this.http.get<T>(primaryUrl).pipe(
-      catchError((err) => {
-        // Helps diagnose runtime issues (bad base href, SSR/dev-server differences, etc.)
-        console.error('[VideoService] GET failed:', primaryUrl, err);
-        return this.http.get<T>(fallbackUrl);
-      }),
+      catchError(() => this.http.get<T>(fallbackUrl)),
     );
   }
 

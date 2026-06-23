@@ -36,33 +36,25 @@ export class ApiService {
   getDashboard(): Observable<ApiSeriesListItem[]> {
     return this.http.get<ApiResponse<ApiSeriesListItem[]>>(`${this.baseUrl}/dashboard`).pipe(
       map((res) => (res.success ? res.data : [])),
-      catchError((err) => {
-        console.error('[ApiService] getDashboard failed:', err);
-        return of([]);
-      })
+      catchError(() => of([])),
     );
   }
 
   getSeries(id: string): Observable<ApiSeriesVideo[]> {
-    console.log(`[ApiService] Requesting series data for id: ${id} from ${this.baseUrl}/series/${id}`);
+    // Requesting series data for id (internal)
     return this.http.get<any>(`${this.baseUrl}/series/${id}`).pipe(
       map((res) => {
         if (res && typeof res === 'object' && 'success' in res) {
-          if (!res.success) {
-            console.warn(`[ApiService] API returned success:false for id ${id}. Response:`, res);
-          }
+          // API returned success flag; continue accordingly
           return res.success ? res.data : [];
         }
         if (Array.isArray(res)) {
           return res;
         }
-        console.warn(`[ApiService] Unexpected response format for id ${id}:`, res);
+        // Unexpected response format for id
         return [];
       }),
-      catchError((err) => {
-        console.error(`[ApiService] HTTP Error for id ${id}:`, err);
-        return of([]);
-      }),
+      catchError(() => of([])),
       map((videos) => this.mapToApiVideos(videos))
     );
   }

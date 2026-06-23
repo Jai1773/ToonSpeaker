@@ -36,9 +36,9 @@ export class Home implements AfterViewInit {
   trendingScrollable = false;
   popularScrollable = false;
 
-  readonly series$: Observable<SeriesListItem[]> = this.apiService.getDashboard().pipe(
+    readonly series$: Observable<SeriesListItem[]> = this.apiService.getDashboard().pipe(
     map((apiItems) => {
-      console.log('Dashboard API Response:', apiItems);
+      // Dashboard API response mapped to SeriesListItem
       return apiItems.map((item) => ({
         name: item.name,
         thumbnail: item.thumbnail,

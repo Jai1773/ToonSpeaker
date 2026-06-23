@@ -90,8 +90,7 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
   app.listen(port, (error) => {
     if (error) throw error;
 
-    console.log(`Server running at http://localhost:${port}`);
-    console.log('Mode:', isDev ? 'DEV (Vite)' : 'PRODUCTION');
+    // Server started (port and mode suppressed from console output)
   });
 }
 

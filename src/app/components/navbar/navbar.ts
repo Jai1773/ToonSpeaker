@@ -104,7 +104,6 @@ export class Navbar implements OnInit {
 
     if (!query) return;
 
-    console.log('Searching:', query);
 
     this.captureLastNonSearchBeforeSearch();
     this.router.navigate(['/search'], {
